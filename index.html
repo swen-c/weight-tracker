@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
   <title>體重紀錄系統</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
@@ -64,6 +64,7 @@
       font-size: 20px;
       font-weight: 700;
       white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .header-logo span { font-size: 26px; }
@@ -71,11 +72,12 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
+      flex-wrap: nowrap;
     }
 
     .btn-ghost {
-      padding: 7px 14px;
+      padding: 7px 12px;
       background: rgba(255,255,255,0.15);
       border: 1px solid rgba(255,255,255,0.25);
       color: white;
@@ -89,12 +91,28 @@
 
     .btn-ghost:hover { background: rgba(255,255,255,0.25); }
 
+    .btn-danger-ghost {
+      padding: 7px 12px;
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #fca5a5;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-danger-ghost:hover { background: rgba(239,68,68,0.22); }
+
     /* ─── MAIN LAYOUT ─── */
     main {
       max-width: 1100px;
       margin: 0 auto;
-      padding: 24px 20px 60px;
-      display: grid;
+      padding: 24px 16px 60px;
+      display: flex;
+      flex-direction: column;
       gap: 20px;
     }
 
@@ -114,15 +132,15 @@
     .profile-banner strong { font-weight: 700; }
 
     .btn-setup {
+      flex-shrink: 0;
       padding: 8px 18px;
       background: var(--primary);
       color: white;
       border: none;
       border-radius: 8px;
-      font-size: 13px;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
-      white-space: nowrap;
       transition: opacity 0.2s;
     }
 
@@ -132,7 +150,7 @@
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
+      gap: 12px;
     }
 
     @media (min-width: 640px) {
@@ -142,39 +160,43 @@
     .stat-card {
       background: var(--bg-card);
       border-radius: var(--radius);
-      padding: 20px;
+      padding: 18px 16px;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 4px;
       transition: box-shadow 0.2s;
     }
 
     .stat-card:hover { box-shadow: var(--shadow-md); }
 
     .stat-label {
-      font-size: 12px;
-      font-weight: 600;
+      font-size: 11px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       color: var(--text-muted);
     }
 
     .stat-value {
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 700;
       color: var(--text);
-      line-height: 1.2;
+      line-height: 1.25;
     }
 
-    .stat-sub { font-size: 12px; color: var(--text-muted); }
+    .stat-sub { font-size: 11px; color: var(--text-muted); }
 
     /* ─── CARDS ─── */
     .card {
       background: var(--bg-card);
       border-radius: var(--radius);
-      padding: 24px;
+      padding: 20px;
       box-shadow: var(--shadow);
+    }
+
+    @media (min-width: 640px) {
+      .card { padding: 24px; }
     }
 
     .card-header {
@@ -187,7 +209,7 @@
     }
 
     .card-title {
-      font-size: 17px;
+      font-size: 16px;
       font-weight: 700;
       color: var(--text);
       display: flex;
@@ -196,19 +218,107 @@
     }
 
     .card-icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 16px;
+      font-size: 15px;
+      flex-shrink: 0;
     }
+
+    /* ─── FORM ─── */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    /* prevent iOS zoom: all inputs/selects get font-size 16px */
+    input[type="number"],
+    input[type="date"],
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      color: var(--text);
+      background: var(--bg-card);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    /* ─── ADD RECORD FORM ─── */
+    .form-section + .form-section {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .form-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .form-grid-4 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (min-width: 800px) {
+      .form-grid-4 { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .btn-add {
+      width: 100%;
+      margin-top: 16px;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-add:hover { opacity: 0.9; }
+    .btn-add:active { transform: scale(0.99); }
 
     /* ─── CHART ─── */
     .chart-container {
       position: relative;
-      height: 280px;
+      height: 260px;
     }
 
     .chart-range-btns {
@@ -234,7 +344,6 @@
       color: var(--primary);
     }
 
-    /* ─── BMI LEGEND ─── */
     .bmi-legend {
       display: flex;
       gap: 10px;
@@ -250,73 +359,12 @@
       color: var(--text-muted);
     }
 
-    .bmi-dot { width: 8px; height: 8px; border-radius: 50%; }
-
-    /* ─── FORM ─── */
-    .form-group { margin-bottom: 16px; }
-
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    input[type="number"],
-    input[type="date"] {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm);
-      font-size: 15px;
-      color: var(--text);
-      background: var(--bg-card);
-      transition: border-color 0.2s, box-shadow 0.2s;
-      outline: none;
-    }
-
-    input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-    }
-
-    @media (min-width: 560px) {
-      .form-row { grid-template-columns: 1fr 1fr; }
-    }
-
-    @media (min-width: 800px) {
-      .form-row { grid-template-columns: 1fr 1fr 1fr auto; align-items: end; }
-    }
-
-    .btn-add {
-      padding: 12px 28px;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      color: white;
-      border: none;
-      border-radius: var(--radius-sm);
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.2s, transform 0.1s;
-      white-space: nowrap;
-      width: 100%;
-    }
-
-    .btn-add:hover { opacity: 0.9; }
-    .btn-add:active { transform: scale(0.99); }
+    .bmi-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 
     /* ─── RECORDS TABLE ─── */
     .table-wrapper {
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
     }
@@ -324,15 +372,16 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 14px;
+      font-size: 13px;
+      min-width: 640px;
     }
 
     thead tr { background: var(--bg); }
 
     th {
-      padding: 12px 16px;
+      padding: 11px 14px;
       text-align: left;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.5px;
@@ -341,18 +390,19 @@
     }
 
     td {
-      padding: 12px 16px;
+      padding: 11px 14px;
       border-top: 1px solid var(--border);
       color: var(--text);
+      white-space: nowrap;
     }
 
     tbody tr:hover { background: #fafafa; }
 
     .bmi-badge {
       display: inline-block;
-      padding: 2px 8px;
+      padding: 2px 7px;
       border-radius: 20px;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 600;
     }
 
@@ -362,12 +412,12 @@
     .bmi-obese  { background: #fee2e2; color: #991b1b; }
 
     .btn-delete {
-      padding: 5px 12px;
+      padding: 4px 11px;
       background: transparent;
       border: 1px solid var(--border);
       color: var(--text-muted);
       border-radius: 6px;
-      font-size: 13px;
+      font-size: 12px;
       cursor: pointer;
       transition: all 0.2s;
     }
@@ -404,7 +454,7 @@
     .modal-card {
       background: var(--bg-card);
       border-radius: 16px;
-      padding: 32px;
+      padding: 28px;
       width: 100%;
       max-width: 440px;
       box-shadow: 0 25px 60px rgba(0,0,0,0.3);
@@ -417,12 +467,23 @@
     }
 
     .modal-title {
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 700;
       margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    }
+
+    .modal-form-group {
+      margin-bottom: 16px;
+    }
+
+    .modal-form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      margin-bottom: 6px;
     }
 
     .modal-actions {
@@ -438,7 +499,7 @@
       border: 1px solid var(--border);
       color: var(--text);
       border-radius: var(--radius-sm);
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 500;
       cursor: pointer;
       transition: background 0.2s;
@@ -453,29 +514,13 @@
       color: white;
       border: none;
       border-radius: var(--radius-sm);
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       transition: opacity 0.2s;
     }
 
     .btn-save:hover { opacity: 0.9; }
-
-    /* ─── CLEAR DATA CONFIRM ─── */
-    .btn-danger-ghost {
-      padding: 7px 14px;
-      background: rgba(239,68,68,0.12);
-      border: 1px solid rgba(239,68,68,0.3);
-      color: #fca5a5;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s;
-      white-space: nowrap;
-    }
-
-    .btn-danger-ghost:hover { background: rgba(239,68,68,0.22); }
 
     /* ─── TOAST ─── */
     .toast {
@@ -502,11 +547,13 @@
       transform: translateX(-50%) translateY(0);
     }
 
+    /* ─── MOBILE ─── */
     @media (max-width: 480px) {
-      .card { padding: 18px; }
-      .stat-value { font-size: 22px; }
-      .header-actions { gap: 6px; }
-      .btn-ghost { padding: 6px 10px; font-size: 12px; }
+      .header-logo { font-size: 17px; }
+      .header-logo span { font-size: 22px; }
+      .btn-ghost, .btn-danger-ghost { padding: 6px 9px; font-size: 12px; }
+      .stat-value { font-size: 20px; }
+      .form-grid-2 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -518,22 +565,22 @@
       <span>⚖️</span> 體重紀錄
     </div>
     <div class="header-actions">
-      <button class="btn-ghost" onclick="exportCSV()">📥 匯出 CSV</button>
+      <button class="btn-ghost" onclick="exportCSV()">📥 匯出</button>
       <button class="btn-ghost" onclick="openSettings()">⚙️ 設定</button>
-      <button class="btn-danger-ghost" onclick="confirmClearData()">🗑 清除資料</button>
+      <button class="btn-danger-ghost" onclick="confirmClearData()">🗑 清除</button>
     </div>
   </div>
 </header>
 
 <main>
 
-  <!-- Setup banner -->
+  <!-- 1. Setup banner -->
   <div class="profile-banner" id="setup-banner" style="display:none">
     <p>👋 歡迎！請先設定您的<strong>身高</strong>以啟用 BMI 計算功能</p>
     <button class="btn-setup" onclick="openSettings()">立即設定</button>
   </div>
 
-  <!-- Stats -->
+  <!-- 2. Stats -->
   <div class="stats-grid">
     <div class="stat-card">
       <div class="stat-label">最新體重</div>
@@ -557,7 +604,56 @@
     </div>
   </div>
 
-  <!-- Chart -->
+  <!-- 3. Add Record (moved up) -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="card-icon" style="background:#d1fae5">➕</div>
+        新增紀錄
+      </div>
+    </div>
+    <form id="add-form" onsubmit="handleAddRecord(event)">
+      <!-- 必填欄位 -->
+      <div class="form-section">
+        <div class="form-section-label">基本資料（必填）</div>
+        <div class="form-grid-2">
+          <div class="form-group">
+            <label>日期</label>
+            <input type="date" id="record-date" required />
+          </div>
+          <div class="form-group">
+            <label>體重 (kg)</label>
+            <input type="number" id="record-weight" step="0.1" min="20" max="500" placeholder="例：70.5" required />
+          </div>
+        </div>
+      </div>
+      <!-- 選填欄位 -->
+      <div class="form-section">
+        <div class="form-section-label">詳細數據（選填）</div>
+        <div class="form-grid-4">
+          <div class="form-group">
+            <label>體脂率 (%)</label>
+            <input type="number" id="record-bodyfat" step="0.1" min="1" max="80" placeholder="例：20.5" />
+          </div>
+          <div class="form-group">
+            <label>肌肉量 (kg)</label>
+            <input type="number" id="record-muscle" step="0.1" min="1" max="200" placeholder="例：30.0" />
+          </div>
+          <div class="form-group">
+            <label>內臟脂肪（等級）</label>
+            <input type="number" id="record-visceral" step="1" min="1" max="30" placeholder="例：5" />
+          </div>
+          <div class="form-group">
+            <label>體水分率 (%)</label>
+            <input type="number" id="record-water" step="0.1" min="1" max="80" placeholder="例：55.0" />
+          </div>
+        </div>
+      </div>
+      <button type="submit" class="btn-add">新增紀錄</button>
+    </form>
+  </div>
+
+  <!-- 4. Chart -->
   <div class="card">
     <div class="card-header">
       <div class="card-title">
@@ -581,37 +677,7 @@
     </div>
   </div>
 
-  <!-- Add Record -->
-  <div class="card">
-    <div class="card-header">
-      <div class="card-title">
-        <div class="card-icon" style="background:#d1fae5">➕</div>
-        新增紀錄
-      </div>
-    </div>
-    <form id="add-form" onsubmit="handleAddRecord(event)">
-      <div class="form-row">
-        <div class="form-group" style="margin-bottom:0">
-          <label>日期</label>
-          <input type="date" id="record-date" required />
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label>體重 (kg)</label>
-          <input type="number" id="record-weight" step="0.1" min="20" max="500" placeholder="例：70.5" required />
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label>體脂率 (%) 選填</label>
-          <input type="number" id="record-bodyfat" step="0.1" min="1" max="80" placeholder="例：20.5" />
-        </div>
-        <div class="form-group" style="margin-bottom:0">
-          <label style="visibility:hidden">送出</label>
-          <button type="submit" class="btn-add">新增</button>
-        </div>
-      </div>
-    </form>
-  </div>
-
-  <!-- History -->
+  <!-- 5. History -->
   <div class="card">
     <div class="card-header">
       <div class="card-title">
@@ -630,11 +696,11 @@
   <div class="modal-card">
     <div class="modal-title">⚙️ 個人設定</div>
     <form id="settings-form" onsubmit="handleSaveSettings(event)">
-      <div class="form-group">
+      <div class="modal-form-group">
         <label>身高 (cm)</label>
         <input type="number" id="height-input" step="0.1" min="100" max="250" placeholder="例：170" />
       </div>
-      <div class="form-group">
+      <div class="modal-form-group">
         <label>目標體重 (kg)</label>
         <input type="number" id="target-input" step="0.1" min="20" max="300" placeholder="例：65" />
       </div>
@@ -649,39 +715,23 @@
 <div id="toast" class="toast"></div>
 
 <script>
-  // ─── STORAGE KEYS ────────────────────────────────────────────
+  // ─── STORAGE ─────────────────────────────────────────────────
   const KEY_PROFILE = 'wt_profile';
   const KEY_RECORDS = 'wt_records';
 
-  // ─── STATE ───────────────────────────────────────────────────
   let profile = { height: null, target_weight: null };
-  let records = [];
+  let records  = [];
   let weightChart = null;
-  let chartRange = 0;
+  let chartRange  = 0;
 
-  // ─── STORAGE HELPERS ─────────────────────────────────────────
   function loadFromStorage() {
-    try {
-      const p = localStorage.getItem(KEY_PROFILE);
-      if (p) profile = JSON.parse(p);
-    } catch (_) {}
-    try {
-      const r = localStorage.getItem(KEY_RECORDS);
-      if (r) records = JSON.parse(r);
-    } catch (_) {}
+    try { const p = localStorage.getItem(KEY_PROFILE); if (p) profile = JSON.parse(p); } catch (_) {}
+    try { const r = localStorage.getItem(KEY_RECORDS);  if (r) records = JSON.parse(r);  } catch (_) {}
   }
 
-  function saveProfile() {
-    localStorage.setItem(KEY_PROFILE, JSON.stringify(profile));
-  }
-
-  function saveRecords() {
-    localStorage.setItem(KEY_RECORDS, JSON.stringify(records));
-  }
-
-  function generateId() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-  }
+  function saveProfile() { localStorage.setItem(KEY_PROFILE, JSON.stringify(profile)); }
+  function saveRecords() { localStorage.setItem(KEY_RECORDS,  JSON.stringify(records));  }
+  function generateId()  { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
 
   // ─── INIT ────────────────────────────────────────────────────
   function init() {
@@ -710,7 +760,7 @@
 
   function handleSaveSettings(e) {
     e.preventDefault();
-    profile.height = parseFloat(document.getElementById('height-input').value) || null;
+    profile.height        = parseFloat(document.getElementById('height-input').value) || null;
     profile.target_weight = parseFloat(document.getElementById('target-input').value) || null;
     saveProfile();
     closeSettings();
@@ -724,17 +774,28 @@
   // ─── RECORDS ─────────────────────────────────────────────────
   function handleAddRecord(e) {
     e.preventDefault();
-    const date = document.getElementById('record-date').value;
-    const weight = parseFloat(document.getElementById('record-weight').value);
-    const bfVal = document.getElementById('record-bodyfat').value;
-    const body_fat = bfVal ? parseFloat(bfVal) : null;
+    const num = id => { const v = document.getElementById(id).value; return v ? parseFloat(v) : null; };
 
-    records.push({ id: generateId(), date, weight, body_fat, created_at: new Date().toISOString() });
+    records.push({
+      id:          generateId(),
+      date:        document.getElementById('record-date').value,
+      weight:      parseFloat(document.getElementById('record-weight').value),
+      body_fat:    num('record-bodyfat'),
+      muscle_mass: num('record-muscle'),
+      visceral:    num('record-visceral'),
+      body_water:  num('record-water'),
+      created_at:  new Date().toISOString()
+    });
+
     records.sort((a, b) => a.date.localeCompare(b.date));
     saveRecords();
 
+    // clear optional fields only
+    ['record-bodyfat','record-muscle','record-visceral','record-water'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
     document.getElementById('record-weight').value = '';
-    document.getElementById('record-bodyfat').value = '';
+
     updateStats();
     renderChart();
     renderHistory();
@@ -766,30 +827,26 @@
 
   // ─── STATS ───────────────────────────────────────────────────
   function updateStats() {
-    const clearEl = id => {
-      document.getElementById(id).textContent = '--';
-      document.getElementById(id).removeAttribute('style');
-    };
-
     if (records.length === 0) {
-      ['stat-weight','stat-bmi','stat-goal','stat-bodyfat'].forEach(clearEl);
-      document.getElementById('stat-weight-date').textContent = '';
-      document.getElementById('stat-bmi-label').textContent = '';
-      document.getElementById('stat-goal-sub').textContent = profile.target_weight ? `目標：${profile.target_weight} kg` : '請設定目標體重';
-      document.getElementById('stat-bodyfat-sub').textContent = '選填欄位';
+      ['stat-weight','stat-bmi','stat-goal','stat-bodyfat'].forEach(id => {
+        document.getElementById(id).textContent = '--';
+        document.getElementById(id).removeAttribute('style');
+      });
+      document.getElementById('stat-weight-date').textContent  = '';
+      document.getElementById('stat-bmi-label').textContent    = '';
+      document.getElementById('stat-goal-sub').textContent     = profile.target_weight ? `目標：${profile.target_weight} kg` : '請設定目標體重';
+      document.getElementById('stat-bodyfat-sub').textContent  = '選填欄位';
       return;
     }
 
     const latest = records[records.length - 1];
 
-    // Weight
     const wEl = document.getElementById('stat-weight');
-    wEl.textContent = latest.weight.toFixed(1) + ' kg';
-    wEl.style.color = 'var(--primary)';
+    wEl.textContent   = latest.weight.toFixed(1) + ' kg';
+    wEl.style.color   = 'var(--primary)';
     document.getElementById('stat-weight-date').textContent = '紀錄於 ' + formatDate(latest.date);
 
-    // BMI
-    const bmiEl = document.getElementById('stat-bmi');
+    const bmiEl  = document.getElementById('stat-bmi');
     const bmiLbl = document.getElementById('stat-bmi-label');
     if (profile.height) {
       const h = profile.height / 100;
@@ -799,37 +856,35 @@
       bmiEl.style.color = color;
       bmiLbl.textContent = label;
     } else {
-      bmiEl.textContent = '--';
+      bmiEl.textContent  = '--';
       bmiLbl.textContent = '請設定身高';
     }
 
-    // Goal
-    const goalEl = document.getElementById('stat-goal');
+    const goalEl  = document.getElementById('stat-goal');
     const goalSub = document.getElementById('stat-goal-sub');
     if (profile.target_weight) {
       const diff = latest.weight - profile.target_weight;
       if (Math.abs(diff) < 0.05) {
-        goalEl.textContent = '已達標！';
-        goalEl.style.color = 'var(--success)';
+        goalEl.textContent  = '已達標！';
+        goalEl.style.color  = 'var(--success)';
       } else {
-        goalEl.textContent = (diff > 0 ? '還差 ' : '超過 ') + Math.abs(diff).toFixed(1) + ' kg';
-        goalEl.style.color = diff > 0 ? 'var(--warning)' : 'var(--danger)';
+        goalEl.textContent  = (diff > 0 ? '還差 ' : '超過 ') + Math.abs(diff).toFixed(1) + ' kg';
+        goalEl.style.color  = diff > 0 ? 'var(--warning)' : 'var(--danger)';
       }
       goalSub.textContent = `目標：${profile.target_weight} kg`;
     } else {
-      goalEl.textContent = '--';
+      goalEl.textContent  = '--';
       goalSub.textContent = '請設定目標體重';
     }
 
-    // Body fat
-    const bfEl = document.getElementById('stat-bodyfat');
+    const bfEl  = document.getElementById('stat-bodyfat');
     const bfSub = document.getElementById('stat-bodyfat-sub');
     const lastBF = [...records].reverse().find(r => r.body_fat != null);
     if (lastBF) {
-      bfEl.textContent = lastBF.body_fat.toFixed(1) + ' %';
+      bfEl.textContent  = lastBF.body_fat.toFixed(1) + ' %';
       bfSub.textContent = '紀錄於 ' + formatDate(lastBF.date);
     } else {
-      bfEl.textContent = '--';
+      bfEl.textContent  = '--';
       bfSub.textContent = '選填欄位';
     }
   }
@@ -849,8 +904,7 @@
     if (chartRange > 0) {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - chartRange);
-      const cutoffStr = cutoff.toLocaleDateString('sv-SE');
-      data = data.filter(r => r.date >= cutoffStr);
+      data = data.filter(r => r.date >= cutoff.toLocaleDateString('sv-SE'));
     }
 
     const labels   = data.map(r => r.date);
@@ -899,10 +953,7 @@
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: {
-            position: 'top',
-            labels: { usePointStyle: true, padding: 16, font: { size: 13 } }
-          },
+          legend: { position: 'top', labels: { usePointStyle: true, padding: 16, font: { size: 12 } } },
           tooltip: {
             backgroundColor: '#1e293b',
             titleColor: '#94a3b8',
@@ -932,14 +983,14 @@
           y: {
             position: 'left',
             grid: { color: 'rgba(0,0,0,0.04)' },
-            title: { display: true, text: '體重 (kg)', font: { size: 12 } },
+            title: { display: true, text: '體重 (kg)', font: { size: 11 } },
             ticks: { font: { size: 11 } }
           },
           y1: {
             position: 'right',
             display: hasBF,
             grid: { drawOnChartArea: false },
-            title: { display: hasBF, text: '體脂率 (%)', font: { size: 12 } },
+            title: { display: hasBF, text: '體脂率 (%)', font: { size: 11 } },
             ticks: { font: { size: 11 } }
           }
         }
@@ -962,6 +1013,8 @@
       return;
     }
 
+    const dash = v => v != null ? v : '<span style="color:var(--text-muted)">--</span>';
+
     const rows = [...records].reverse().map(r => {
       let bmiHtml = '--';
       if (profile.height) {
@@ -975,7 +1028,10 @@
           <td>${formatDate(r.date)}</td>
           <td><strong>${r.weight.toFixed(1)}</strong> kg</td>
           <td>${bmiHtml}</td>
-          <td>${r.body_fat != null ? r.body_fat.toFixed(1) + ' %' : '<span style="color:var(--text-muted)">--</span>'}</td>
+          <td>${r.body_fat    != null ? r.body_fat.toFixed(1)    + ' %'  : dash(null)}</td>
+          <td>${r.muscle_mass != null ? r.muscle_mass.toFixed(1) + ' kg' : dash(null)}</td>
+          <td>${r.visceral    != null ? r.visceral + ' 級'               : dash(null)}</td>
+          <td>${r.body_water  != null ? r.body_water.toFixed(1)  + ' %'  : dash(null)}</td>
           <td><button class="btn-delete" onclick="deleteRecord('${r.id}')">刪除</button></td>
         </tr>`;
     }).join('');
@@ -985,7 +1041,14 @@
         <table>
           <thead>
             <tr>
-              <th>日期</th><th>體重</th><th>BMI</th><th>體脂率</th><th>操作</th>
+              <th>日期</th>
+              <th>體重</th>
+              <th>BMI</th>
+              <th>體脂率</th>
+              <th>肌肉量</th>
+              <th>內臟脂肪</th>
+              <th>體水分率</th>
+              <th>操作</th>
             </tr>
           </thead>
           <tbody>${rows}</tbody>
@@ -997,31 +1060,36 @@
   function exportCSV() {
     if (records.length === 0) { toast('沒有資料可匯出'); return; }
 
-    const header = ['日期', '體重(kg)', 'BMI', '體脂率(%)'];
+    const header = ['日期', '體重(kg)', 'BMI', '體脂率(%)', '肌肉量(kg)', '內臟脂肪(等級)', '體水分率(%)'];
     const rows = records.map(r => {
       let bmi = '';
       if (profile.height) {
         const h = profile.height / 100;
         bmi = (r.weight / (h * h)).toFixed(1);
       }
-      return [r.date, r.weight.toFixed(1), bmi, r.body_fat != null ? r.body_fat.toFixed(1) : ''];
+      return [
+        r.date,
+        r.weight.toFixed(1),
+        bmi,
+        r.body_fat    != null ? r.body_fat.toFixed(1)    : '',
+        r.muscle_mass != null ? r.muscle_mass.toFixed(1) : '',
+        r.visceral    != null ? r.visceral                : '',
+        r.body_water  != null ? r.body_water.toFixed(1)  : ''
+      ];
     });
 
     const csv = [header, ...rows].map(row => row.join(',')).join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    const url  = URL.createObjectURL(blob);
     Object.assign(document.createElement('a'), {
-      href: url,
-      download: `體重紀錄_${todayStr()}.csv`
+      href: url, download: `體重紀錄_${todayStr()}.csv`
     }).click();
     URL.revokeObjectURL(url);
     toast('📥 CSV 已匯出！');
   }
 
   // ─── HELPERS ─────────────────────────────────────────────────
-  function todayStr() {
-    return new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
-  }
+  function todayStr()    { return new Date().toLocaleDateString('sv-SE'); }
 
   function formatDate(str) {
     return new Date(str + 'T00:00:00').toLocaleDateString('zh-TW', {
@@ -1045,7 +1113,6 @@
     toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
   }
 
-  // ─── START ────────────────────────────────────────────────────
   init();
 </script>
 </body>
