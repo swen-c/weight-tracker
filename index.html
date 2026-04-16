@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>體重紀錄系統</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #e0e7ff;
+      --secondary: #8b5cf6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --bg: #f1f5f9;
+      --bg-card: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+      --radius: 12px;
+      --radius-sm: 8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    /* ─── AUTH ─── */
+    #auth-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+    }
+
+    .auth-card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 40px 36px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.25);
+    }
+
+    .auth-logo {
+      font-size: 48px;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    .auth-card h1 {
+      text-align: center;
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .auth-card .subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      padding: 4px;
+      margin-bottom: 24px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: var(--bg-card);
+      color: var(--primary);
+      box-shadow: var(--shadow);
+      font-weight: 600;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input[type="email"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      color: var(--text);
+      background: var(--bg-card);
+      transition: border-color 0.2s, box-shadow 0.2s;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    .btn-primary {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin-top: 8px;
+    }
+
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-primary:active { transform: scale(0.99); }
+
+    .auth-message {
+      margin-top: 14px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      text-align: center;
+      display: none;
+    }
+
+    .auth-message.error { background: #fef2f2; color: var(--danger); display: block; }
+    .auth-message.success { background: #f0fdf4; color: var(--success); display: block; }
+    .auth-message.info { background: #eff6ff; color: var(--info); display: block; }
+
+    /* ─── APP HEADER ─── */
+    #app-screen { display: none; }
+
+    header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 0 20px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+    }
+
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+      gap: 12px;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .header-logo span { font-size: 26px; }
+
+    .header-email {
+      font-size: 13px;
+      opacity: 0.8;
+      display: none;
+    }
+
+    @media (min-width: 600px) { .header-email { display: block; } }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-ghost {
+      padding: 7px 14px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      color: white;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-ghost:hover { background: rgba(255,255,255,0.25); }
+
+    /* ─── MAIN LAYOUT ─── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+      display: grid;
+      gap: 20px;
+    }
+
+    /* ─── STATS CARDS ─── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    @media (min-width: 640px) {
+      .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: box-shadow 0.2s;
+    }
+
+    .stat-card:hover { box-shadow: var(--shadow-md); }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ─── CARDS ─── */
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    /* ─── CHART ─── */
+    .chart-container {
+      position: relative;
+      height: 280px;
+    }
+
+    /* ─── ADD RECORD FORM ─── */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 560px) {
+      .form-row { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (min-width: 800px) {
+      .form-row { grid-template-columns: 1fr 1fr 1fr auto; align-items: end; }
+    }
+
+    .btn-add {
+      padding: 12px 28px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      white-space: nowrap;
+      width: 100%;
+    }
+
+    .btn-add:hover { opacity: 0.9; }
+    .btn-add:active { transform: scale(0.99); }
+
+    /* ─── RECORDS TABLE ─── */
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead tr {
+      background: var(--bg);
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    tbody tr:hover { background: #fafafa; }
+
+    .bmi-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .bmi-low { background: #fef3c7; color: #92400e; }
+    .bmi-normal { background: #d1fae5; color: #065f46; }
+    .bmi-high { background: #fef3c7; color: #92400e; }
+    .bmi-obese { background: #fee2e2; color: #991b1b; }
+
+    .btn-delete {
+      padding: 5px 12px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-delete:hover {
+      background: #fef2f2;
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+    /* ─── MODAL ─── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 32px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+      animation: modalIn 0.2s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95) translateY(-10px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      padding: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-cancel:hover { background: var(--border); }
+
+    .btn-save {
+      flex: 1;
+      padding: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    .btn-save:hover { opacity: 0.9; }
+
+    /* ─── TOAST ─── */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e293b;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      z-index: 300;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ─── BMI LEGEND ─── */
+    .bmi-legend {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+
+    .bmi-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .bmi-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    /* ─── LOADING ─── */
+    .spinner {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── PROFILE BANNER ─── */
+    .profile-banner {
+      background: linear-gradient(135deg, #e0e7ff, #ede9fe);
+      border: 1px solid #c7d2fe;
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .profile-banner p {
+      font-size: 14px;
+      color: #4338ca;
+    }
+
+    .profile-banner strong { font-weight: 700; }
+
+    .btn-setup {
+      padding: 8px 18px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.2s;
+    }
+
+    .btn-setup:hover { opacity: 0.85; }
+
+    @media (max-width: 480px) {
+      .auth-card { padding: 28px 22px; }
+      .card { padding: 18px; }
+      .stat-value { font-size: 22px; }
+      .header-actions { gap: 6px; }
+      .btn-ghost { padding: 6px 10px; font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════ AUTH SCREEN ═══════════════════════ -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">⚖️</div>
+    <h1>體重紀錄系統</h1>
+    <p class="subtitle">追蹤您的健康旅程，達成目標體重</p>
+
+    <div class="auth-tabs">
+      <button class="tab-btn active" onclick="switchTab('login')">登入</button>
+      <button class="tab-btn" onclick="switchTab('register')">註冊</button>
+    </div>
+
+    <!-- Login -->
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label>電子郵件</label>
+        <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email" required />
+      </div>
+      <div class="form-group">
+        <label>密碼</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required />
+      </div>
+      <button type="submit" class="btn-primary" id="login-btn">登入</button>
+    </form>
+
+    <!-- Register -->
+    <form id="register-form" onsubmit="handleRegister(event)" style="display:none">
+      <div class="form-group">
+        <label>電子郵件</label>
+        <input type="email" id="reg-email" placeholder="your@email.com" autocomplete="email" required />
+      </div>
+      <div class="form-group">
+        <label>密碼（至少 6 位）</label>
+        <input type="password" id="reg-password" placeholder="••••••••" autocomplete="new-password" minlength="6" required />
+      </div>
+      <button type="submit" class="btn-primary" id="reg-btn">建立帳號</button>
+    </form>
+
+    <div class="auth-message" id="auth-msg"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ APP SCREEN ═══════════════════════ -->
+<div id="app-screen">
+  <header>
+    <div class="header-inner">
+      <div class="header-logo">
+        <span>⚖️</span> 體重紀錄
+      </div>
+      <span class="header-email" id="header-email"></span>
+      <div class="header-actions">
+        <button class="btn-ghost" onclick="exportCSV()">📥 匯出</button>
+        <button class="btn-ghost" onclick="openSettings()">⚙️ 設定</button>
+        <button class="btn-ghost" onclick="handleLogout()">登出</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Setup banner (shown if no height) -->
+    <div class="profile-banner" id="setup-banner" style="display:none">
+      <p>👋 歡迎！請先設定您的<strong>身高</strong>以啟用 BMI 計算與目標體重功能</p>
+      <button class="btn-setup" onclick="openSettings()">立即設定</button>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">最新體重</div>
+        <div class="stat-value" id="stat-weight" style="color:var(--primary)">--</div>
+        <div class="stat-sub" id="stat-weight-date"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">BMI 指數</div>
+        <div class="stat-value" id="stat-bmi">--</div>
+        <div class="stat-sub" id="stat-bmi-label"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">距離目標</div>
+        <div class="stat-value" id="stat-goal">--</div>
+        <div class="stat-sub" id="stat-goal-sub"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">體脂率</div>
+        <div class="stat-value" id="stat-bodyfat">--</div>
+        <div class="stat-sub" id="stat-bodyfat-sub"></div>
+      </div>
+    </div>
+
+    <!-- Chart -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon" style="background:#e0e7ff">📈</div>
+          體重趨勢圖
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-ghost" style="color:var(--text-muted);border-color:var(--border);background:var(--bg);font-size:12px;padding:5px 10px" onclick="setChartRange(30)">30天</button>
+          <button class="btn-ghost" style="color:var(--text-muted);border-color:var(--border);background:var(--bg);font-size:12px;padding:5px 10px" onclick="setChartRange(90)">90天</button>
+          <button class="btn-ghost" style="color:var(--text-muted);border-color:var(--border);background:var(--bg);font-size:12px;padding:5px 10px" onclick="setChartRange(0)">全部</button>
+        </div>
+      </div>
+      <div class="chart-container">
+        <canvas id="weight-chart"></canvas>
+      </div>
+      <div class="bmi-legend" style="margin-top:12px">
+        <span class="bmi-legend-item"><span class="bmi-dot" style="background:#fbbf24"></span>過輕 &lt;18.5</span>
+        <span class="bmi-legend-item"><span class="bmi-dot" style="background:#10b981"></span>正常 18.5–24</span>
+        <span class="bmi-legend-item"><span class="bmi-dot" style="background:#f59e0b"></span>過重 24–27</span>
+        <span class="bmi-legend-item"><span class="bmi-dot" style="background:#ef4444"></span>肥胖 ≥27</span>
+      </div>
+    </div>
+
+    <!-- Add Record -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon" style="background:#d1fae5">➕</div>
+          新增紀錄
+        </div>
+      </div>
+      <form id="add-form" onsubmit="handleAddRecord(event)">
+        <div class="form-row">
+          <div class="form-group" style="margin-bottom:0">
+            <label>日期</label>
+            <input type="date" id="record-date" required />
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>體重 (kg)</label>
+            <input type="number" id="record-weight" step="0.1" min="20" max="500" placeholder="例：70.5" required />
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>體脂率 (%) 選填</label>
+            <input type="number" id="record-bodyfat" step="0.1" min="1" max="80" placeholder="例：20.5" />
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label style="visibility:hidden">送出</label>
+            <button type="submit" class="btn-add" id="add-btn">新增</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <!-- History -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-icon" style="background:#fce7f3">📋</div>
+          歷史紀錄
+        </div>
+        <span id="record-count" style="font-size:13px;color:var(--text-muted)"></span>
+      </div>
+      <div id="history-container"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════ SETTINGS MODAL ═══════════════════════ -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal-card">
+    <div class="modal-title">⚙️ 個人設定</div>
+    <form id="settings-form" onsubmit="handleSaveSettings(event)">
+      <div class="form-group">
+        <label>身高 (cm)</label>
+        <input type="number" id="height-input" step="0.1" min="100" max="250" placeholder="例：170" />
+      </div>
+      <div class="form-group">
+        <label>目標體重 (kg)</label>
+        <input type="number" id="target-input" step="0.1" min="20" max="300" placeholder="例：65" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="closeSettings()">取消</button>
+        <button type="submit" class="btn-save">儲存設定</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- ═══════════════════════ SCRIPT ═══════════════════════ -->
+<script>
+  const SUPABASE_URL = 'https://uwuwiyopmcblgxteosym.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_nzhNQnqUPrIWjl0-duEoQA_2X7gQmIv';
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  let currentUser = null;
+  let profile = { height: null, target_weight: null };
+  let records = [];
+  let weightChart = null;
+  let chartRange = 0; // 0 = all
+
+  // ─── INIT ────────────────────────────────────────────────────
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      currentUser = session.user;
+      await enterApp();
+    }
+
+    sb.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user && !currentUser) {
+        currentUser = session.user;
+        await enterApp();
+      } else if (!session) {
+        currentUser = null;
+        exitApp();
+      }
+    });
+  }
+
+  async function enterApp() {
+    show('app-screen');
+    hide('auth-screen');
+    document.getElementById('header-email').textContent = currentUser.email;
+    // Set today as default date
+    document.getElementById('record-date').value = todayStr();
+    await Promise.all([loadProfile(), loadRecords()]);
+  }
+
+  function exitApp() {
+    show('auth-screen');
+    hide('app-screen');
+    records = [];
+    profile = { height: null, target_weight: null };
+    if (weightChart) { weightChart.destroy(); weightChart = null; }
+  }
+
+  // ─── AUTH ─────────────────────────────────────────────────────
+  function switchTab(tab) {
+    const isLogin = tab === 'login';
+    show(isLogin ? 'login-form' : 'register-form');
+    hide(isLogin ? 'register-form' : 'login-form');
+    document.querySelectorAll('.tab-btn').forEach((b, i) => {
+      b.classList.toggle('active', i === (isLogin ? 0 : 1));
+    });
+    clearAuthMsg();
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const btn = document.getElementById('login-btn');
+    btn.innerHTML = '<span class="spinner"></span> 登入中';
+    btn.disabled = true;
+
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      showAuthMsg(friendlyError(error.message), 'error');
+      btn.innerHTML = '登入';
+      btn.disabled = false;
+    }
+  }
+
+  async function handleRegister(e) {
+    e.preventDefault();
+    const btn = document.getElementById('reg-btn');
+    btn.innerHTML = '<span class="spinner"></span> 建立中';
+    btn.disabled = true;
+
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const { error } = await sb.auth.signUp({ email, password });
+
+    if (error) {
+      showAuthMsg(friendlyError(error.message), 'error');
+    } else {
+      showAuthMsg('✅ 帳號已建立！請確認您的電子郵件後登入。', 'success');
+    }
+    btn.innerHTML = '建立帳號';
+    btn.disabled = false;
+  }
+
+  async function handleLogout() {
+    await sb.auth.signOut();
+  }
+
+  // ─── PROFILE ─────────────────────────────────────────────────
+  async function loadProfile() {
+    const { data } = await sb.from('profiles').select('*').eq('id', currentUser.id).single();
+    if (data) profile = data;
+    document.getElementById('setup-banner').style.display = profile?.height ? 'none' : 'flex';
+  }
+
+  async function handleSaveSettings(e) {
+    e.preventDefault();
+    const height = parseFloat(document.getElementById('height-input').value) || null;
+    const targetWeight = parseFloat(document.getElementById('target-input').value) || null;
+
+    const { error } = await sb.from('profiles').upsert({
+      id: currentUser.id,
+      height,
+      target_weight: targetWeight
+    });
+
+    if (!error) {
+      profile = { ...profile, id: currentUser.id, height, target_weight: targetWeight };
+      closeSettings();
+      document.getElementById('setup-banner').style.display = profile.height ? 'none' : 'flex';
+      updateStats();
+      renderChart();
+      renderHistory();
+      toast('設定已儲存！');
+    } else {
+      toast('儲存失敗，請重試');
+    }
+  }
+
+  function openSettings() {
+    document.getElementById('height-input').value = profile?.height || '';
+    document.getElementById('target-input').value = profile?.target_weight || '';
+    document.getElementById('settings-modal').classList.add('open');
+  }
+
+  function closeSettings() {
+    document.getElementById('settings-modal').classList.remove('open');
+  }
+
+  // click outside to close
+  document.getElementById('settings-modal').addEventListener('click', (e) => {
+    if (e.target === e.currentTarget) closeSettings();
+  });
+
+  // ─── RECORDS ─────────────────────────────────────────────────
+  async function loadRecords() {
+    const { data, error } = await sb
+      .from('weight_records')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('date', { ascending: true });
+
+    if (!error && data) {
+      records = data;
+      updateStats();
+      renderChart();
+      renderHistory();
+    }
+  }
+
+  async function handleAddRecord(e) {
+    e.preventDefault();
+    const btn = document.getElementById('add-btn');
+    btn.disabled = true;
+    btn.textContent = '新增中...';
+
+    const date = document.getElementById('record-date').value;
+    const weight = parseFloat(document.getElementById('record-weight').value);
+    const bodyFatVal = document.getElementById('record-bodyfat').value;
+    const body_fat = bodyFatVal ? parseFloat(bodyFatVal) : null;
+
+    const { data, error } = await sb
+      .from('weight_records')
+      .insert({ user_id: currentUser.id, date, weight, body_fat })
+      .select()
+      .single();
+
+    if (!error && data) {
+      records.push(data);
+      records.sort((a, b) => a.date.localeCompare(b.date));
+      document.getElementById('record-weight').value = '';
+      document.getElementById('record-bodyfat').value = '';
+      updateStats();
+      renderChart();
+      renderHistory();
+      toast('✅ 紀錄已新增！');
+    } else {
+      toast('新增失敗，請重試');
+    }
+
+    btn.disabled = false;
+    btn.textContent = '新增';
+  }
+
+  async function deleteRecord(id) {
+    if (!confirm('確定要刪除這筆紀錄嗎？')) return;
+
+    const { error } = await sb.from('weight_records').delete().eq('id', id);
+    if (!error) {
+      records = records.filter(r => r.id !== id);
+      updateStats();
+      renderChart();
+      renderHistory();
+      toast('紀錄已刪除');
+    }
+  }
+
+  // ─── STATS ───────────────────────────────────────────────────
+  function updateStats() {
+    if (records.length === 0) {
+      ['stat-weight','stat-bmi','stat-goal','stat-bodyfat'].forEach(id => {
+        document.getElementById(id).textContent = '--';
+        document.getElementById(id).removeAttribute('style');
+      });
+      document.getElementById('stat-weight-date').textContent = '';
+      document.getElementById('stat-bmi-label').textContent = '';
+      document.getElementById('stat-goal-sub').textContent = '';
+      document.getElementById('stat-bodyfat-sub').textContent = '';
+      return;
+    }
+
+    const latest = records[records.length - 1];
+
+    // Weight
+    const wEl = document.getElementById('stat-weight');
+    wEl.textContent = latest.weight.toFixed(1) + ' kg';
+    wEl.style.color = 'var(--primary)';
+    document.getElementById('stat-weight-date').textContent =
+      '紀錄於 ' + formatDate(latest.date);
+
+    // BMI
+    const bmiEl = document.getElementById('stat-bmi');
+    const bmiLbl = document.getElementById('stat-bmi-label');
+    if (profile?.height) {
+      const h = profile.height / 100;
+      const bmi = latest.weight / (h * h);
+      bmiEl.textContent = bmi.toFixed(1);
+      const { label, color } = bmiInfo(bmi);
+      bmiEl.style.color = color;
+      bmiLbl.textContent = label;
+    } else {
+      bmiEl.textContent = '--';
+      bmiLbl.textContent = '請設定身高';
+    }
+
+    // Goal
+    const goalEl = document.getElementById('stat-goal');
+    const goalSub = document.getElementById('stat-goal-sub');
+    if (profile?.target_weight) {
+      const diff = latest.weight - profile.target_weight;
+      if (Math.abs(diff) < 0.05) {
+        goalEl.textContent = '已達標！';
+        goalEl.style.color = 'var(--success)';
+        goalSub.textContent = `目標：${profile.target_weight} kg`;
+      } else {
+        const sign = diff > 0 ? '還差' : '超過';
+        goalEl.textContent = `${sign} ${Math.abs(diff).toFixed(1)} kg`;
+        goalEl.style.color = diff > 0 ? 'var(--warning)' : 'var(--danger)';
+        goalSub.textContent = `目標：${profile.target_weight} kg`;
+      }
+    } else {
+      goalEl.textContent = '--';
+      goalSub.textContent = '請設定目標體重';
+    }
+
+    // Body fat
+    const bfEl = document.getElementById('stat-bodyfat');
+    const bfSub = document.getElementById('stat-bodyfat-sub');
+    const lastBF = [...records].reverse().find(r => r.body_fat != null);
+    if (lastBF) {
+      bfEl.textContent = lastBF.body_fat.toFixed(1) + ' %';
+      bfSub.textContent = '紀錄於 ' + formatDate(lastBF.date);
+    } else {
+      bfEl.textContent = '--';
+      bfSub.textContent = '選填欄位';
+    }
+  }
+
+  // ─── CHART ───────────────────────────────────────────────────
+  function setChartRange(days) { chartRange = days; renderChart(); }
+
+  function renderChart() {
+    const ctx = document.getElementById('weight-chart').getContext('2d');
+
+    let data = [...records];
+    if (chartRange > 0) {
+      const cutoff = new Date();
+      cutoff.setDate(cutoff.getDate() - chartRange);
+      const cutoffStr = cutoff.toISOString().split('T')[0];
+      data = data.filter(r => r.date >= cutoffStr);
+    }
+
+    const labels = data.map(r => r.date);
+    const weights = data.map(r => r.weight);
+    const bodyFats = data.map(r => r.body_fat ?? null);
+    const hasBF = bodyFats.some(v => v !== null);
+
+    const datasets = [{
+      label: '體重 (kg)',
+      data: weights,
+      borderColor: '#6366f1',
+      backgroundColor: 'rgba(99,102,241,0.08)',
+      borderWidth: 2.5,
+      pointRadius: data.length > 60 ? 2 : 4,
+      pointHoverRadius: 6,
+      pointBackgroundColor: '#6366f1',
+      tension: 0.35,
+      fill: true,
+      yAxisID: 'y'
+    }];
+
+    if (hasBF) {
+      datasets.push({
+        label: '體脂率 (%)',
+        data: bodyFats,
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245,158,11,0.05)',
+        borderWidth: 2,
+        pointRadius: data.length > 60 ? 2 : 4,
+        pointHoverRadius: 6,
+        pointBackgroundColor: '#f59e0b',
+        tension: 0.35,
+        fill: false,
+        yAxisID: 'y1',
+        spanGaps: true
+      });
+    }
+
+    if (weightChart) weightChart.destroy();
+
+    weightChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'top', labels: { usePointStyle: true, padding: 16, font: { size: 13 } } },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#94a3b8',
+            bodyColor: '#f1f5f9',
+            padding: 12,
+            callbacks: {
+              title: items => formatDate(items[0].label),
+              label: item => {
+                const unit = item.datasetIndex === 0 ? ' kg' : ' %';
+                return ` ${item.dataset.label}: ${item.raw != null ? item.raw.toFixed(1) + unit : '--'}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            ticks: {
+              maxTicksLimit: 10,
+              font: { size: 11 },
+              callback(val) {
+                const lbl = this.getLabelForValue(val);
+                const d = new Date(lbl + 'T00:00:00');
+                return d.toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' });
+              }
+            }
+          },
+          y: {
+            position: 'left',
+            grid: { color: 'rgba(0,0,0,0.04)' },
+            title: { display: true, text: '體重 (kg)', font: { size: 12 } },
+            ticks: { font: { size: 11 } }
+          },
+          y1: {
+            position: 'right',
+            display: hasBF,
+            grid: { drawOnChartArea: false },
+            title: { display: hasBF, text: '體脂率 (%)', font: { size: 12 } },
+            ticks: { font: { size: 11 } }
+          }
+        }
+      }
+    });
+  }
+
+  // ─── HISTORY ─────────────────────────────────────────────────
+  function renderHistory() {
+    const container = document.getElementById('history-container');
+    const countEl = document.getElementById('record-count');
+    countEl.textContent = records.length > 0 ? `共 ${records.length} 筆` : '';
+
+    if (records.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-icon">📭</div>
+          <p>尚無紀錄，請新增第一筆體重紀錄！</p>
+        </div>`;
+      return;
+    }
+
+    const sorted = [...records].reverse();
+    const rows = sorted.map(r => {
+      let bmiHtml = '--';
+      if (profile?.height) {
+        const h = profile.height / 100;
+        const bmi = r.weight / (h * h);
+        const { label, cls } = bmiInfo(bmi, true);
+        bmiHtml = `<span class="bmi-badge ${cls}">${bmi.toFixed(1)} ${label}</span>`;
+      }
+      return `
+        <tr>
+          <td>${formatDate(r.date)}</td>
+          <td><strong>${r.weight.toFixed(1)}</strong> kg</td>
+          <td>${bmiHtml}</td>
+          <td>${r.body_fat != null ? r.body_fat.toFixed(1) + ' %' : '<span style="color:var(--text-muted)">--</span>'}</td>
+          <td>
+            <button class="btn-delete" onclick="deleteRecord('${r.id}')">刪除</button>
+          </td>
+        </tr>`;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>體重</th>
+              <th>BMI</th>
+              <th>體脂率</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // ─── CSV EXPORT ───────────────────────────────────────────────
+  function exportCSV() {
+    if (records.length === 0) { toast('沒有資料可匯出'); return; }
+
+    const header = ['日期', '體重(kg)', 'BMI', '體脂率(%)'];
+    const rows = records.map(r => {
+      let bmi = '';
+      if (profile?.height) {
+        const h = profile.height / 100;
+        bmi = (r.weight / (h * h)).toFixed(1);
+      }
+      return [r.date, r.weight.toFixed(1), bmi, r.body_fat != null ? r.body_fat.toFixed(1) : ''];
+    });
+
+    const csv = [header, ...rows].map(row => row.join(',')).join('\n');
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), {
+      href: url,
+      download: `體重紀錄_${todayStr()}.csv`
+    });
+    a.click();
+    URL.revokeObjectURL(url);
+    toast('📥 CSV 已匯出！');
+  }
+
+  // ─── HELPERS ─────────────────────────────────────────────────
+  function todayStr() {
+    return new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD
+  }
+
+  function formatDate(str) {
+    const d = new Date(str + 'T00:00:00');
+    return d.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  function bmiInfo(bmi, badge = false) {
+    if (bmi < 18.5) return { label: '過輕', color: 'var(--warning)', cls: 'bmi-low' };
+    if (bmi < 24)   return { label: '正常', color: 'var(--success)', cls: 'bmi-normal' };
+    if (bmi < 27)   return { label: '過重', color: 'var(--warning)', cls: 'bmi-high' };
+    return { label: '肥胖', color: 'var(--danger)', cls: 'bmi-obese' };
+  }
+
+  function friendlyError(msg) {
+    if (msg.includes('Invalid login')) return '電子郵件或密碼錯誤';
+    if (msg.includes('Email not confirmed')) return '請先確認您的電子郵件';
+    if (msg.includes('already registered')) return '此電子郵件已被註冊';
+    if (msg.includes('Password should be')) return '密碼至少需要 6 個字元';
+    return msg;
+  }
+
+  function show(id) { document.getElementById(id).style.display = ''; }
+  function hide(id) { document.getElementById(id).style.display = 'none'; }
+
+  function showAuthMsg(msg, type) {
+    const el = document.getElementById('auth-msg');
+    el.textContent = msg;
+    el.className = 'auth-message ' + type;
+  }
+
+  function clearAuthMsg() {
+    const el = document.getElementById('auth-msg');
+    el.textContent = '';
+    el.className = 'auth-message';
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+  }
+
+  // ─── START ────────────────────────────────────────────────────
+  init();
+</script>
+</body>
+</html>
